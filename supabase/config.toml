@@ -1,0 +1,8 @@
+
+project_id = "dkvzsrpiidpnfkrgukem"
+
+[api]
+port = 54321
+
+[functions.check-signup-rate-limit]
+verify_jwt = false

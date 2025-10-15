@@ -1,0 +1,158 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* MePlusAI Design System - Navy & Teal Theme */
+
+@layer base {
+  :root {
+    /* Light mode (fallback) */
+    --background: 0 0% 100%;
+    --foreground: 211 74% 13%;
+    --card: 0 0% 100%;
+    --card-foreground: 211 74% 13%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 211 74% 13%;
+    --primary: 168 76% 42%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 211 40% 25%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 210 10% 93%;
+    --muted-foreground: 211 20% 40%;
+    --accent: 168 76% 42%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 168 76% 42%;
+    --radius: 0.75rem;
+    
+    /* Custom theme tokens */
+    --navy: 211 74% 13%;
+    --teal: 168 76% 42%;
+    --teal-glow: 168 76% 52%;
+    --success: 142 76% 36%;
+    --warning: 38 92% 50%;
+    --info: 213 94% 68%;
+    
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--teal)), hsl(var(--teal-glow)));
+    --gradient-navy: linear-gradient(135deg, hsl(var(--navy)), hsl(211 50% 20%));
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --shadow-glow: 0 0 30px hsl(var(--teal) / 0.3);
+    --shadow-glow-strong: 0 0 40px hsl(var(--teal) / 0.5);
+  }
+
+  .dark {
+    /* Dark mode (default) - Navy background with Teal accent */
+    --background: 211 74% 13%;
+    --foreground: 0 0% 98%;
+    --card: 211 60% 16%;
+    --card-foreground: 0 0% 98%;
+    --popover: 211 60% 16%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 168 76% 42%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 211 50% 20%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 211 50% 20%;
+    --muted-foreground: 215 20% 65%;
+    --accent: 168 76% 42%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 63% 31%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 211 50% 20%;
+    --input: 211 50% 20%;
+    --ring: 168 76% 42%;
+    
+    /* Enhanced dark tokens */
+    --navy: 211 74% 13%;
+    --teal: 168 76% 42%;
+    --teal-glow: 168 76% 52%;
+    --success: 142 71% 45%;
+    --warning: 38 92% 50%;
+    --info: 213 94% 68%;
+    
+    /* Dark gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--teal)), hsl(var(--teal-glow)));
+    --gradient-navy: linear-gradient(135deg, hsl(var(--navy)), hsl(211 50% 20%));
+    
+    /* Dark shadows with teal glow */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.3);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.3), 0 2px 4px -2px rgb(0 0 0 / 0.3);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.3), 0 4px 6px -4px rgb(0 0 0 / 0.3);
+    --shadow-glow: 0 0 30px hsl(var(--teal) / 0.3);
+    --shadow-glow-strong: 0 0 40px hsl(var(--teal) / 0.5);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Montserrat', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-weight: 700;
+  }
+
+  /* Accessibility - Focus rings */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-accent ring-offset-2 ring-offset-background;
+  }
+
+  /* Respect prefers-reduced-motion */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+@layer utilities {
+  /* Glow hover effect */
+  .hover-glow {
+    @apply transition-shadow duration-300;
+  }
+  
+  .hover-glow:hover {
+    box-shadow: var(--shadow-glow);
+  }
+
+  .hover-glow-strong:hover {
+    box-shadow: var(--shadow-glow-strong);
+  }
+
+  /* Interactive element base styles */
+  .interactive {
+    @apply transition-all duration-200 hover-glow cursor-pointer;
+  }
+
+  /* Typography utilities */
+  .text-headline {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 32px;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .text-body {
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+  }
+}
