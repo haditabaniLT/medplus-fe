@@ -4,7 +4,7 @@ import { RootState } from "../store";
 import { updateUserProfile } from "../store/slices/sessionSlice";
 import { getUserProfile, updateUserProfile as updateSupabaseProfile } from "@/supabase/auth";
 import DashboardLayout from "../components/layout/DashboardLayout";
-import { Button } from "../components/ui/Button";
+import { Button } from "../components/ui/button";
 import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Textarea } from "../components/ui/textarea";
