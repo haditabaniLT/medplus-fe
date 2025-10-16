@@ -46,14 +46,11 @@ export interface UpdateTaskRequest {
   title?: string;
   content?: string;
   category?: string;
+  status?: 'pending' | 'in_progress' | 'completed' | 'cancelled' | 'active' | 'archived' | 'deleted';
   priority?: 'low' | 'medium' | 'high';
   due_date?: string;
   tags?: string[];
-  status?: 'pending' | 'in_progress' | 'completed' | 'cancelled';
-  type?: 'generated' | 'custom';
-  is_shared?: boolean;
-  shared_link?: string;
-  metadata?: Record<string, any>;
+  favorite?: boolean; // API uses 'favorite' instead of 'is_favorite'
 }
 
 export interface GetTasksQueryParams {

@@ -57,7 +57,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '../components/ui/tooltip';
-import { useGetTaskQuery } from '../store/api/taskApi';
+import { useGetTaskQuery, useUpdateTaskMutation, useDeleteTaskMutation } from '../store/api/taskApi';
 import { Task } from '../types/task.types';
 
 const TaskDetail: React.FC = () => {
@@ -76,6 +76,10 @@ const TaskDetail: React.FC = () => {
   } = useGetTaskQuery(id!, {
     skip: !id
   });
+
+  // Mutations
+  const [updateTask, { isLoading: isUpdating }] = useUpdateTaskMutation();
+  const [deleteTask, { isLoading: isDeleting }] = useDeleteTaskMutation();
 
   const [editMode, setEditMode] = useState(false);
   const [editedContent, setEditedContent] = useState('');
@@ -139,15 +143,32 @@ const TaskDetail: React.FC = () => {
     return () => clearTimeout(checkConcurrentEdit);
   }, [editMode]);
 
-  const handleSave = useCallback(() => {
-    // Mock save functionality
-    setLastSaved(new Date());
-    setHasUnsavedChanges(false);
-    toast({
-      title: 'Changes saved',
-      description: 'Your edits have been saved successfully.',
-    });
-  }, [toast]);
+  const handleSave = useCallback(async () => {
+    if (!task || !hasUnsavedChanges) return;
+    
+    try {
+      await updateTask({
+        id: task.id,
+        updates: {
+          content: editedContent,
+        }
+      }).unwrap();
+      
+      setLastSaved(new Date());
+      setHasUnsavedChanges(false);
+      toast({
+        title: 'Changes saved',
+        description: 'Your edits have been saved successfully.',
+      });
+    } catch (error) {
+      console.error('Error saving task:', error);
+      toast({
+        title: 'Save failed',
+        description: 'Failed to save your changes. Please try again.',
+        variant: 'destructive',
+      });
+    }
+  }, [task, hasUnsavedChanges, editedContent, updateTask, toast]);
 
   const handleContentChange = (value: string) => {
     setEditedContent(value);
@@ -158,12 +179,24 @@ const TaskDetail: React.FC = () => {
     setShowExportModal(true);
   };
 
-  const handleDelete = () => {
-    toast({
-      title: 'Task deleted',
-      description: 'The task has been deleted successfully.',
-    });
-    navigate('/tasks');
+  const handleDelete = async () => {
+    if (!task) return;
+    
+    try {
+      await deleteTask(task.id).unwrap();
+      toast({
+        title: 'Task deleted',
+        description: 'The task has been deleted successfully.',
+      });
+      navigate('/tasks');
+    } catch (error) {
+      console.error('Error deleting task:', error);
+      toast({
+        title: 'Delete failed',
+        description: 'Failed to delete the task. Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleDuplicate = () => {
@@ -409,10 +442,15 @@ const TaskDetail: React.FC = () => {
                   <Copy className="h-4 w-4 mr-2" />
                   Duplicate
                 </Button>
-                <Button variant="outline" size="sm" onClick={handleDelete}>
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Delete
-                </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={handleDelete}
+                      disabled={isDeleting}
+                    >
+                      <Trash2 className="h-4 w-4 mr-2" />
+                      {isDeleting ? 'Deleting...' : 'Delete'}
+                    </Button>
               </div>
             </div>
           </div>
@@ -505,11 +543,16 @@ const TaskDetail: React.FC = () => {
                 {hasUnsavedChanges && (
                   <Badge variant="outline" className="text-xs">Unsaved changes</Badge>
                 )}
-                {editMode && (
-                  <Button variant="default" size="sm" onClick={handleSave} disabled={!hasUnsavedChanges}>
-                    Save Changes
-                  </Button>
-                )}
+                    {editMode && (
+                      <Button 
+                        variant="default" 
+                        size="sm" 
+                        onClick={handleSave} 
+                        disabled={!hasUnsavedChanges || isUpdating}
+                      >
+                        {isUpdating ? 'Saving...' : 'Save Changes'}
+                      </Button>
+                    )}
                 <Sheet>
                   <SheetTrigger asChild>
                     <Button variant="outline" size="sm">

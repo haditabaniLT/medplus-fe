@@ -112,13 +112,17 @@ export const taskApi = createApi({
 
     // Update an existing task
     updateTask: builder.mutation<Task, { id: string; updates: UpdateTaskRequest }>({
-      query: ({ id, updates }) => ({
-        url: `${API_ENDPOINTS.TASKS}/${id}`,
-        method: 'PUT',
-        body: updates,
-      }),
+      query: ({ id, updates }) => {
+        console.log('updateTask - id:', id, 'updates:', updates);
+        return {
+          url: `${API_ENDPOINTS.TASKS}/${id}`,
+          method: 'PUT',
+          body: updates,
+        };
+      },
       transformResponse: (response: { success: boolean; data: Task; message: string }) => {
         // Transform the API response to return just the task data
+        console.log('updateTask transformResponse - raw response:', response);
         return response.data;
       },
       transformErrorResponse: (response: any) => {
@@ -131,12 +135,16 @@ export const taskApi = createApi({
 
     // Delete a task
     deleteTask: builder.mutation<void, string>({
-      query: (id) => ({
-        url: `${API_ENDPOINTS.TASKS}/${id}`,
-        method: 'DELETE',
-      }),
+      query: (id) => {
+        console.log('deleteTask - id:', id);
+        return {
+          url: `${API_ENDPOINTS.TASKS}/${id}`,
+          method: 'DELETE',
+        };
+      },
       transformResponse: (response: { success: boolean; message: string }) => {
         // Transform the API response - delete operations typically return success status
+        console.log('deleteTask transformResponse - raw response:', response);
         return undefined; // void return type
       },
       transformErrorResponse: (response: any) => {
