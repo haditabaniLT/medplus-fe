@@ -7,7 +7,7 @@ import { setActiveCategory } from '../store/slices/uiSlice';
 import { Template } from '../types/template.types';
 import { Sparkles, Plus, Search, Edit, Trash2, Lock, Play, RefreshCw, Loader2 } from 'lucide-react';
 import DashboardLayout from '../components/layout/DashboardLayout';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';

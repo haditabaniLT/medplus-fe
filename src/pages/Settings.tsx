@@ -5,7 +5,7 @@ import { getUserProfile, updateUserProfile, updateUserPassword } from "@/supabas
 import { toggleTheme } from '../store/slices/themeSlice';
 import { updatePreferences, toggleIntegration, updateIntegrationSync } from '../store/slices/settingsSlice';
 import DashboardLayout from '../components/layout/DashboardLayout';
-import { Button } from '../components/ui/Button';
+import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/Card';

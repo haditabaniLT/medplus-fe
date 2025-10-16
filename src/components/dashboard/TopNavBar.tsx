@@ -7,7 +7,7 @@ import { markAsRead, markAllAsRead } from '../../store/slices/notificationsSlice
 import { logout } from '../../store/slices/sessionSlice';
 import { logoutUser } from '../../supabase/auth';
 import { useGetUsageQuery } from '../../store/api/taskApi';
-import { Button } from '../ui/Button';
+import { Button } from '../ui/button';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
 import {
