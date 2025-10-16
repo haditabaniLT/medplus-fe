@@ -29,7 +29,9 @@ const DashboardMain: React.FC = () => {
   } = useGetTasksQuery({
     limit: 5,
     offset: 0,
-    status: 'active'
+    status: 'active',
+    sortBy: 'created_at',
+    sortOrder: 'desc'
   });
 
   const taskGeneratorRef = useRef<HTMLDivElement>(null);

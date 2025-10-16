@@ -41,11 +41,28 @@ const Tasks = () => {
 
   // Build query parameters for the API
   const queryParams = {
+    // Pagination
     limit: 20,
     offset: (page - 1) * 20,
+    
+    // Search and filters
     search: searchQuery || undefined,
-    category: selectedCategories.length === 1 ? selectedCategories[0] : undefined,
+    category: selectedCategories.length > 0 ? selectedCategories[0] : undefined, // TODO: Support multiple categories
     status: 'active' as const,
+    
+    // Date range filters (convert from Date objects to ISO strings)
+    fromDate: dateRange.from ? dateRange.from.toISOString().split('T')[0] : undefined,
+    toDate: dateRange.to ? dateRange.to.toISOString().split('T')[0] : undefined,
+    
+    // Sorting (map UI sort options to API sort options)
+    sortBy: sortBy === 'newest' ? 'created_at' : 
+            sortBy === 'oldest' ? 'created_at' : 
+            sortBy === 'category' ? 'category' : 'created_at',
+    sortOrder: sortBy === 'oldest' ? 'asc' : 'desc',
+    
+    // Additional filters (can be extended later)
+    // priority: undefined, // Can be added when priority filter is implemented
+    // isFavorite: undefined, // Can be added when favorite filter is implemented
   };
 
   // Fetch tasks using the API
@@ -55,16 +72,6 @@ const Tasks = () => {
     error,
     refetch 
   } = useGetTasksQuery(queryParams);
-
-  // Refetch when filters change
-  useEffect(() => {
-    refetch();
-  }, [searchQuery, selectedCategories, page, refetch]);
-
-  // Reset page when filters change
-  useEffect(() => {
-    setPage(1);
-  }, [searchQuery, selectedCategories]);
 
   // Infinite scroll handler
   useEffect(() => {

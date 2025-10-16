@@ -58,24 +58,34 @@ export const taskApi = createApi({
     getTasks: builder.query<GetTasksResponse, GetTasksQueryParams | void>({
       query: (params) => {
         const queryParams = params || {};
-        // Convert array parameters to comma-separated strings for URL
+        // Convert parameters to URL query string
         const urlParams = new URLSearchParams();
         
+        // Basic filters
         if (queryParams.category) urlParams.append('category', queryParams.category);
         if (queryParams.status) urlParams.append('status', queryParams.status);
+        if (queryParams.search) urlParams.append('search', queryParams.search);
+        if (queryParams.priority) urlParams.append('priority', queryParams.priority);
+        
+        // Date filters
+        if (queryParams.fromDate) urlParams.append('fromDate', queryParams.fromDate);
+        if (queryParams.toDate) urlParams.append('toDate', queryParams.toDate);
+        
+        // Boolean filters
+        if (queryParams.isFavorite !== undefined) urlParams.append('isFavorite', queryParams.isFavorite.toString());
+        
+        // Sorting
+        if (queryParams.sortBy) urlParams.append('sortBy', queryParams.sortBy);
+        if (queryParams.sortOrder) urlParams.append('sortOrder', queryParams.sortOrder);
+        
+        // Pagination
         if (queryParams.limit) urlParams.append('limit', queryParams.limit.toString());
         if (queryParams.offset) urlParams.append('offset', queryParams.offset.toString());
-        if (queryParams.search) urlParams.append('search', queryParams.search);
-        if (queryParams.type) urlParams.append('type', queryParams.type);
-        if (queryParams.is_favorite !== undefined) urlParams.append('is_favorite', queryParams.is_favorite.toString());
-        if (queryParams.is_shared !== undefined) urlParams.append('is_shared', queryParams.is_shared.toString());
-        if (queryParams.tags && queryParams.tags.length > 0) {
-          urlParams.append('tags', queryParams.tags.join(','));
-        }
 
-        return {
-          url: `${API_ENDPOINTS.TASKS}?${urlParams.toString()}`,
-        };
+        const queryString = urlParams.toString();
+        const url = queryString ? `${API_ENDPOINTS.TASKS}?${queryString}` : API_ENDPOINTS.TASKS;
+        
+        return { url };
       },
       transformResponse: (response: { success: boolean; data: Task[]; message: string }) => {
         // Transform the API response to match our expected format
@@ -87,7 +97,7 @@ export const taskApi = createApi({
       },
       transformErrorResponse: (response: any) => {
         // Handle API error responses
-        console.error('API Error:', response);
+        console.error('API Error (getTasks):', response);
         return response;
       },
       providesTags: ['Task'],

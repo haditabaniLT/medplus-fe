@@ -56,13 +56,15 @@ export interface UpdateTaskRequest {
 export interface GetTasksQueryParams {
   category?: string;
   status?: string;
+  search?: string;
+  fromDate?: string;
+  toDate?: string;
+  priority?: 'low' | 'medium' | 'high';
+  isFavorite?: boolean;
+  sortBy?: 'created_at' | 'updated_at' | 'title' | 'category' | 'priority' | 'due_date';
+  sortOrder?: 'asc' | 'desc';
   limit?: number;
   offset?: number;
-  search?: string;
-  type?: 'generated' | 'custom';
-  is_favorite?: boolean;
-  is_shared?: boolean;
-  tags?: string[];
 }
 
 export interface GetTasksResponse {
