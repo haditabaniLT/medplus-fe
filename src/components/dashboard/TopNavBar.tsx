@@ -6,6 +6,7 @@ import { toggleTheme } from '../../store/slices/themeSlice';
 import { markAsRead, markAllAsRead } from '../../store/slices/notificationsSlice';
 import { logout } from '../../store/slices/sessionSlice';
 import { logoutUser } from '../../supabase/auth';
+import { useGetUsageQuery } from '../../store/api/taskApi';
 import { Button } from '../ui/Button';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
@@ -38,10 +39,13 @@ const TopNavBar: React.FC<TopNavBarProps> = ({ onMenuToggle, onUpgrade }) => {
   const { user } = useSelector((state: RootState) => state.session);
   const { isDark } = useSelector((state: RootState) => state.theme);
   const { notifications } = useSelector((state: RootState) => state.notifications);
-  const [tasksUsed] = useState(7); // Mock usage
+  
+  // Fetch usage data using the API
+  const { data: usageData } = useGetUsageQuery();
 
   const userPlan = (user?.plan?.toLowerCase() || 'base') as 'base' | 'pro';
-  const maxTasks = userPlan === 'base' ? 10 : 100;
+  const tasksUsed = usageData?.usage.tasks_generated || 0;
+  const maxTasks = usageData?.limits.tasks_generated || (userPlan === 'base' ? 10 : 100);
   const usagePercentage = (tasksUsed / maxTasks) * 100;
 
   const unreadNotifications = notifications.filter(n => !n.read);

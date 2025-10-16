@@ -176,6 +176,30 @@ export const taskApi = createApi({
       query: () => ({
         url: API_ENDPOINTS.USAGE,
       }),
+      transformResponse: (response: { 
+        success: boolean; 
+        data: {
+          plan: string;
+          usage: {
+            tasks_generated: number;
+            export_count: number;
+          };
+          limits: {
+            tasks_generated: number;
+            export_limit: number;
+          };
+        }; 
+        message: string 
+      }) => {
+        // Transform the API response to return just the usage data
+        console.log('getUsage transformResponse - raw response:', response);
+        return response.data;
+      },
+      transformErrorResponse: (response: any) => {
+        // Handle API error responses
+        console.error('API Error (getUsage):', response);
+        return response;
+      },
       providesTags: ['Usage'],
     }),
 

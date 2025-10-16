@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { X, Zap, Plus, Clock, AlertCircle } from 'lucide-react';
+import { X, Zap, Plus, Clock, AlertCircle, BarChart3, TrendingUp, FileText } from 'lucide-react';
 import { useSelector } from 'react-redux';
 import { RootState } from '../../store';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/Card';
@@ -11,7 +11,7 @@ import TaskGenerator from './TaskGenerator';
 import UpgradeModal from '../modals/UpgradeModal';
 import { getSupabaseAccessToken } from '@/utils/supabaseAuth';
 import supabase from '@/supabase/supabaseClient';
-import { useGetTasksQuery } from '../../store/api/taskApi';
+import { useGetTasksQuery, useGetUsageQuery } from '../../store/api/taskApi';
 import { Skeleton } from '../ui/skeleton';
 
 const DashboardMain: React.FC = () => {
@@ -33,6 +33,13 @@ const DashboardMain: React.FC = () => {
     sortBy: 'created_at',
     sortOrder: 'desc'
   });
+
+  // Fetch usage data using the API
+  const { 
+    data: usageData, 
+    isLoading: usageLoading, 
+    error: usageError 
+  } = useGetUsageQuery();
 
   const taskGeneratorRef = useRef<HTMLDivElement>(null);
 
@@ -76,12 +83,87 @@ const DashboardMain: React.FC = () => {
             </Alert>
           )}
 
+          {/* Analytics Cards */}
+          <div className="grid gap-4 md:grid-cols-3">
+            {/* Tasks Generated Card */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Tasks Generated</CardTitle>
+                <BarChart3 className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                {usageLoading ? (
+                  <Skeleton className="h-8 w-16" />
+                ) : usageError ? (
+                  <div className="text-sm text-muted-foreground">Error loading</div>
+                ) : (
+                  <>
+                    <div className="text-2xl font-bold">
+                      {usageData?.usage.tasks_generated || 0}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      of {usageData?.limits.tasks_generated || 0} limit
+                    </p>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Export Count Card */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Exports</CardTitle>
+                <FileText className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                {usageLoading ? (
+                  <Skeleton className="h-8 w-16" />
+                ) : usageError ? (
+                  <div className="text-sm text-muted-foreground">Error loading</div>
+                ) : (
+                  <>
+                    <div className="text-2xl font-bold">
+                      {usageData?.usage.export_count || 0}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      of {usageData?.limits.export_limit || 0} limit
+                    </p>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Plan Status Card */}
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Current Plan</CardTitle>
+                <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                {usageLoading ? (
+                  <Skeleton className="h-8 w-16" />
+                ) : usageError ? (
+                  <div className="text-sm text-muted-foreground">Error loading</div>
+                ) : (
+                  <>
+                    <div className="text-2xl font-bold">
+                      {usageData?.plan || 'BASE'}
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      {usageData?.plan === 'PRO' ? 'Unlimited access' : 'Upgrade for more'}
+                    </p>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
           {/* Task Generator */}
           <div ref={taskGeneratorRef}>
             <TaskGenerator
               userPlan={userPlan}
-              tasksUsed={7}
-              maxTasks={userPlan === 'pro' ? 100 : 10}
+              tasksUsed={usageData?.usage.tasks_generated || 0}
+              maxTasks={usageData?.limits.tasks_generated || (userPlan === 'pro' ? 100 : 10)}
               onUpgrade={() => setShowUpgradeModal(true)}
             />
           </div>
@@ -152,25 +234,6 @@ const DashboardMain: React.FC = () => {
           </Card>
         </div>
       </ScrollArea>
-
-      {/* Right Sidebar - Analytics */}
-      <aside className="hidden xl:block w-64 border-l border-border bg-background">
-        <ScrollArea className="h-full">
-          <div className="p-4 space-y-4">
-            {/* Quick Stats */}
-            <Card className="p-3 max-w-[200px]">
-              <p className="text-xs font-medium text-muted-foreground mb-1">Completed Today</p>
-              <div className="text-2xl font-bold">3</div>
-            </Card>
-
-            {/* Active Tasks */}
-            <Card className="p-3 max-w-[200px]">
-              <p className="text-xs font-medium text-muted-foreground mb-1">Active Tasks</p>
-              <div className="text-2xl font-bold">1</div>
-            </Card>
-          </div>
-        </ScrollArea>
-      </aside>
 
       {/* Upgrade Modal */}
       <UpgradeModal
