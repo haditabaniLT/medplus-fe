@@ -2,10 +2,10 @@ import React, { useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { RootState } from '../store';
-import { addTemplate, updateTemplate, deleteTemplate } from '../store/slices/templatesSlice';
+import { useGetTemplatesQuery, useUpdateTemplateMutation, useDeleteTemplateMutation } from '../store/api/templateApi';
 import { setActiveCategory } from '../store/slices/uiSlice';
 import { Template } from '../types/template.types';
-import { Sparkles, Plus, Search, Edit, Trash2, Lock, Play, RefreshCw } from 'lucide-react';
+import { Sparkles, Plus, Search, Edit, Trash2, Lock, Play, RefreshCw, Loader2 } from 'lucide-react';
 import DashboardLayout from '../components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../components/ui/card';
 import { Button } from '../components/ui/button';
@@ -42,7 +42,23 @@ const Templates: React.FC = () => {
   
   const user = useSelector((state: RootState) => state.session.user);
   const userPlan = user?.plan || 'BASE';
-  const { templates, starterTemplates } = useSelector((state: RootState) => state.templates);
+  const { starterTemplates } = useSelector((state: RootState) => state.templates);
+  
+  // API hooks
+  const { 
+    data: templatesData, 
+    isLoading: templatesLoading, 
+    error: templatesError,
+    refetch: refetchTemplates 
+  } = useGetTemplatesQuery({
+    isPublic: false, // Get user's own templates
+    limit: 100, // Get all templates
+  });
+  
+  const [updateTemplate, { isLoading: isUpdatingTemplate }] = useUpdateTemplateMutation();
+  const [deleteTemplate, { isLoading: isDeletingTemplate }] = useDeleteTemplateMutation();
+  
+  const templates = templatesData?.templates || [];
   
   const [searchQuery, setSearchQuery] = useState('');
   const [editingTemplate, setEditingTemplate] = useState<Template | null>(null);
@@ -56,18 +72,13 @@ const Templates: React.FC = () => {
     const query = searchQuery.toLowerCase();
     return templateList.filter(
       t =>
-        t.name.toLowerCase().includes(query) ||
-        t.tags.some(tag => tag.toLowerCase().includes(query)) ||
+        t.title.toLowerCase().includes(query) ||
+        (t.tags && t.tags.some(tag => tag.toLowerCase().includes(query))) ||
         t.content.toLowerCase().includes(query)
     );
   };
 
   const handleApplyTemplate = (template: Template) => {
-    if (template.isProOnly && userPlan === 'BASE') {
-      setShowUpgradeModal(true);
-      return;
-    }
-
     // Set category in Redux state
     dispatch(setActiveCategory(template.category));
     
@@ -75,8 +86,8 @@ const Templates: React.FC = () => {
     navigate('/dashboard', { 
       state: { 
         templateContent: template.content,
-        templateTone: template.tone,
-        templateLanguage: template.language,
+        templateTone: 'neutral', // Default tone since API doesn't have tone field
+        templateLanguage: 'en', // Default language since API doesn't have language field
       } 
     });
     
@@ -87,44 +98,60 @@ const Templates: React.FC = () => {
   };
 
   const handleEditTemplate = (template: Template) => {
-    if (userPlan === 'BASE' && template.isStarter) {
-      setShowUpgradeModal(true);
-      return;
-    }
     setEditingTemplate(template);
   };
 
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (!editingTemplate) return;
 
-    dispatch(updateTemplate({
-      id: editingTemplate.id,
-      updates: {
-        name: editingTemplate.name,
-        tags: editingTemplate.tags,
-        content: editingTemplate.content,
-      },
-    }));
+    try {
+      await updateTemplate({
+        id: editingTemplate.id,
+        updates: {
+          title: editingTemplate.title,
+          tags: editingTemplate.tags,
+          content: editingTemplate.content,
+        },
+      }).unwrap();
 
-    toast({
-      title: 'Template updated',
-      description: 'Your changes have been saved.',
-    });
+      toast({
+        title: 'Template updated',
+        description: 'Your changes have been saved.',
+      });
 
-    setEditingTemplate(null);
+      setEditingTemplate(null);
+    } catch (error: any) {
+      console.error('Error updating template:', error);
+      
+      toast({
+        title: 'Failed to update template',
+        description: error?.data?.message || 'An error occurred while updating your template. Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
 
-  const handleDeleteConfirm = () => {
+  const handleDeleteConfirm = async () => {
     if (!deletingTemplate) return;
 
-    dispatch(deleteTemplate(deletingTemplate.id));
+    try {
+      await deleteTemplate(deletingTemplate.id).unwrap();
 
-    toast({
-      title: 'Template deleted',
-      description: 'The template has been removed from your library.',
-    });
+      toast({
+        title: 'Template deleted',
+        description: 'The template has been removed from your library.',
+      });
 
-    setDeletingTemplate(null);
+      setDeletingTemplate(null);
+    } catch (error: any) {
+      console.error('Error deleting template:', error);
+      
+      toast({
+        title: 'Failed to delete template',
+        description: error?.data?.message || 'An error occurred while deleting your template. Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleOptimizeTemplate = (template: Template) => {
@@ -135,29 +162,39 @@ const Templates: React.FC = () => {
     setOptimizingTemplate(template);
   };
 
-  const handleAcceptOptimization = () => {
+  const handleAcceptOptimization = async () => {
     if (!optimizingTemplate) return;
 
-    // Mock optimization: make the content shorter/clearer
-    const optimizedContent = `[OPTIMIZED] ${optimizingTemplate.content.slice(0, 150)}...`;
-    
-    dispatch(updateTemplate({
-      id: optimizingTemplate.id,
-      updates: { content: optimizedContent },
-    }));
+    try {
+      // Mock optimization: make the content shorter/clearer
+      const optimizedContent = `[OPTIMIZED] ${optimizingTemplate.content.slice(0, 150)}...`;
+      
+      await updateTemplate({
+        id: optimizingTemplate.id,
+        updates: { content: optimizedContent },
+      }).unwrap();
 
-    toast({
-      title: 'Template optimized',
-      description: 'Your template has been improved for better results.',
-    });
+      toast({
+        title: 'Template optimized',
+        description: 'Your template has been improved for better results.',
+      });
 
-    setOptimizingTemplate(null);
+      setOptimizingTemplate(null);
+    } catch (error: any) {
+      console.error('Error optimizing template:', error);
+      
+      toast({
+        title: 'Failed to optimize template',
+        description: error?.data?.message || 'An error occurred while optimizing your template. Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const renderTemplateCard = (template: Template, isStarter: boolean = false) => {
     const isProUser = userPlan === 'PRO';
-    const isLocked = template.isProOnly && !isProUser;
-    const canEdit = !isStarter || isProUser;
+    const isLocked = false; // API templates don't have isProOnly field
+    const canEdit = !isStarter; // Can edit user's own templates
 
     return (
       <Card key={template.id} className={`${isLocked ? 'opacity-75' : ''}`}>
@@ -165,7 +202,7 @@ const Templates: React.FC = () => {
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1">
               <CardTitle className="flex items-center gap-2 text-base">
-                {template.name}
+                {template.title}
                 {isLocked && <Lock className="h-4 w-4 text-muted-foreground" />}
               </CardTitle>
               <CardDescription className="text-xs mt-1">
@@ -174,7 +211,7 @@ const Templates: React.FC = () => {
             </div>
           </div>
           <div className="flex flex-wrap gap-1 mt-2">
-            {template.tags.map((tag, idx) => (
+            {template.tags && template.tags.map((tag, idx) => (
               <Badge key={idx} variant="secondary" className="text-xs">
                 {tag}
               </Badge>
@@ -202,6 +239,7 @@ const Templates: React.FC = () => {
                   size="sm"
                   variant="outline"
                   onClick={() => handleEditTemplate(template)}
+                  disabled={isUpdatingTemplate}
                 >
                   <Edit className="h-3 w-3 mr-1" />
                   Edit
@@ -211,6 +249,7 @@ const Templates: React.FC = () => {
                   size="sm"
                   variant="outline"
                   onClick={() => setDeletingTemplate(template)}
+                  disabled={isDeletingTemplate}
                 >
                   <Trash2 className="h-3 w-3 mr-1" />
                   Delete
@@ -276,7 +315,26 @@ const Templates: React.FC = () => {
             </TabsList>
 
             <TabsContent value="my-templates" className="space-y-4">
-              {filteredMyTemplates.length === 0 && !searchQuery && (
+              {templatesLoading && (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  <span className="ml-2 text-muted-foreground">Loading templates...</span>
+                </div>
+              )}
+
+              {templatesError && (
+                <Card className="border-destructive">
+                  <CardContent className="flex flex-col items-center justify-center py-12">
+                    <p className="text-destructive mb-4">Failed to load templates</p>
+                    <Button onClick={() => refetchTemplates()}>
+                      <RefreshCw className="h-4 w-4 mr-2" />
+                      Retry
+                    </Button>
+                  </CardContent>
+                </Card>
+              )}
+
+              {!templatesLoading && !templatesError && filteredMyTemplates.length === 0 && !searchQuery && (
                 <Card className="border-dashed">
                   <CardContent className="flex flex-col items-center justify-center py-12">
                     <Sparkles className="h-12 w-12 text-muted-foreground mb-4" />
@@ -292,7 +350,7 @@ const Templates: React.FC = () => {
                 </Card>
               )}
 
-              {filteredMyTemplates.length === 0 && searchQuery && (
+              {!templatesLoading && !templatesError && filteredMyTemplates.length === 0 && searchQuery && (
                 <Card className="border-dashed">
                   <CardContent className="flex flex-col items-center justify-center py-12">
                     <Search className="h-12 w-12 text-muted-foreground mb-4" />
@@ -304,9 +362,11 @@ const Templates: React.FC = () => {
                 </Card>
               )}
 
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-                {filteredMyTemplates.map(template => renderTemplateCard(template))}
-              </div>
+              {!templatesLoading && !templatesError && filteredMyTemplates.length > 0 && (
+                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {filteredMyTemplates.map(template => renderTemplateCard(template))}
+                </div>
+              )}
             </TabsContent>
 
             <TabsContent value="starter-templates" className="space-y-4">
@@ -333,9 +393,9 @@ const Templates: React.FC = () => {
               <div className="space-y-2">
                 <Label>Template Name</Label>
                 <Input
-                  value={editingTemplate.name}
+                  value={editingTemplate.title}
                   onChange={(e) =>
-                    setEditingTemplate({ ...editingTemplate, name: e.target.value })
+                    setEditingTemplate({ ...editingTemplate, title: e.target.value })
                   }
                   placeholder="My Template"
                 />
@@ -344,7 +404,7 @@ const Templates: React.FC = () => {
               <div className="space-y-2">
                 <Label>Tags (comma-separated)</Label>
                 <Input
-                  value={editingTemplate.tags.join(', ')}
+                  value={editingTemplate.tags ? editingTemplate.tags.join(', ') : ''}
                   onChange={(e) =>
                     setEditingTemplate({
                       ...editingTemplate,
@@ -384,7 +444,7 @@ const Templates: React.FC = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Template</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete "{deletingTemplate?.name}"? This action cannot be
+              Are you sure you want to delete "{deletingTemplate?.title}"? This action cannot be
               undone.
             </AlertDialogDescription>
           </AlertDialogHeader>

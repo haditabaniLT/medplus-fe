@@ -1,8 +1,6 @@
 import React, { useState } from 'react';
-import { useDispatch } from 'react-redux';
-import { Save, X } from 'lucide-react';
-import { addTemplate } from '../../store/slices/templatesSlice';
-import { Template } from '../../types/template.types';
+import { Save, X, Loader2 } from 'lucide-react';
+import { useCreateTemplateMutation } from '../../store/api/templateApi';
 import { TaskCategory } from '../../types/task.types';
 import {
   Dialog,
@@ -35,8 +33,8 @@ const SaveTemplateModal: React.FC<SaveTemplateModalProps> = ({
   tone,
   language,
 }) => {
-  const dispatch = useDispatch();
   const { toast } = useToast();
+  const [createTemplate, { isLoading: isCreatingTemplate }] = useCreateTemplateMutation();
   const [name, setName] = useState('');
   const [tagInput, setTagInput] = useState('');
   const [tags, setTags] = useState<string[]>([]);
@@ -52,7 +50,7 @@ const SaveTemplateModal: React.FC<SaveTemplateModalProps> = ({
     setTags(tags.filter(t => t !== tag));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!name.trim()) {
       toast({
         title: 'Name required',
@@ -62,32 +60,37 @@ const SaveTemplateModal: React.FC<SaveTemplateModalProps> = ({
       return;
     }
 
-    const template: Template = {
-      id: `template-${Date.now()}`,
-      name: name.trim(),
-      content,
-      tags,
-      category,
-      tone,
-      language,
-      isStarter: false,
-      isProOnly: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+    try {
+      const templateData = {
+        title: name.trim(),
+        category: category,
+        content: content,
+        tags: tags,
+        is_public: false, // Default to private
+        is_favorite: false, // Default to not favorite
+      };
 
-    dispatch(addTemplate(template));
+      await createTemplate(templateData).unwrap();
 
-    toast({
-      title: 'Template saved',
-      description: 'Your template has been saved to your library.',
-    });
+      toast({
+        title: 'Template saved',
+        description: 'Your template has been saved to your library.',
+      });
 
-    // Reset and close
-    setName('');
-    setTags([]);
-    setTagInput('');
-    onClose();
+      // Reset and close
+      setName('');
+      setTags([]);
+      setTagInput('');
+      onClose();
+    } catch (error: any) {
+      console.error('Error saving template:', error);
+      
+      toast({
+        title: 'Failed to save template',
+        description: error?.data?.message || 'An error occurred while saving your template. Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -155,12 +158,21 @@ const SaveTemplateModal: React.FC<SaveTemplateModalProps> = ({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
+          <Button variant="outline" onClick={onClose} disabled={isCreatingTemplate}>
             Cancel
           </Button>
-          <Button onClick={handleSave}>
-            <Save className="h-4 w-4 mr-2" />
-            Save Template
+          <Button onClick={handleSave} disabled={isCreatingTemplate}>
+            {isCreatingTemplate ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Saving...
+              </>
+            ) : (
+              <>
+                <Save className="h-4 w-4 mr-2" />
+                Save Template
+              </>
+            )}
           </Button>
         </DialogFooter>
       </DialogContent>

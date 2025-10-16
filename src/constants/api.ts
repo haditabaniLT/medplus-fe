@@ -8,6 +8,7 @@ export const API_BASE_URL = 'https://jurmnoxhssnemxdagecd.supabase.co/functions/
 // API Endpoints
 export const API_ENDPOINTS = {
   TASKS: '/tasks',
+  TEMPLATES: '/templates',
   USAGE: '/usage',
 } as const;
 

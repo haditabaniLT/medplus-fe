@@ -60,38 +60,44 @@ export const taskApi = createApi({
         const queryParams = params || {};
         // Convert parameters to URL query string
         const urlParams = new URLSearchParams();
-        
+
         // Basic filters
         if (queryParams.category) urlParams.append('category', queryParams.category);
         if (queryParams.status) urlParams.append('status', queryParams.status);
         if (queryParams.search) urlParams.append('search', queryParams.search);
         if (queryParams.priority) urlParams.append('priority', queryParams.priority);
-        
+
         // Date filters
         if (queryParams.fromDate) urlParams.append('fromDate', queryParams.fromDate);
         if (queryParams.toDate) urlParams.append('toDate', queryParams.toDate);
-        
+
         // Boolean filters
         if (queryParams.isFavorite !== undefined) urlParams.append('isFavorite', queryParams.isFavorite.toString());
-        
+
         // Sorting
         if (queryParams.sortBy) urlParams.append('sortBy', queryParams.sortBy);
         if (queryParams.sortOrder) urlParams.append('sortOrder', queryParams.sortOrder);
-        
+
         // Pagination
         if (queryParams.limit) urlParams.append('limit', queryParams.limit.toString());
         if (queryParams.offset) urlParams.append('offset', queryParams.offset.toString());
 
         const queryString = urlParams.toString();
         const url = queryString ? `${API_ENDPOINTS.TASKS}?${queryString}` : API_ENDPOINTS.TASKS;
-        
+
         return { url };
       },
-      transformResponse: (response: { success: boolean; data: Task[]; message: string }) => {
+      transformResponse: (response: { success: boolean; data: { data: Task[] }; message: string }) => {
         // Transform the API response to match our expected format
+        console.log('getTasks transformResponse - raw response:', response);
+        console.log('getTasks transformResponse - response.data:', response.data);
+        console.log('getTasks transformResponse - response.data type:', typeof response.data);
+        console.log('getTasks transformResponse - isArray:', Array.isArray(response.data.data));
+
+        const tasks = Array.isArray(response.data.data) ? response.data.data : [];
         return {
-          tasks: response.data || [],
-          total: response.data?.length || 0,
+          tasks,
+          total: tasks.length,
           hasMore: false, // TODO: Implement proper hasMore logic based on pagination
         };
       },

@@ -90,7 +90,13 @@ const Tasks = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [tasksData?.hasMore, isLoading]);
 
-  const displayedTasks = tasksData?.tasks || [];
+  const displayedTasks = Array.isArray(tasksData?.tasks) ? tasksData.tasks : [];
+  
+  // Debug logging
+  console.log('Tasks component - tasksData:', tasksData);
+  console.log('Tasks component - displayedTasks:', displayedTasks);
+  console.log('Tasks component - displayedTasks type:', typeof displayedTasks);
+  console.log('Tasks component - isArray:', Array.isArray(displayedTasks));
 
   const toggleTaskSelection = (id: string) => {
     setSelectedTasks(prev => {

@@ -12,6 +12,7 @@ import notificationsSlice from './slices/notificationsSlice';
 import settingsSlice from './slices/settingsSlice';
 import userSlice from './slices/userSlice';
 import { taskApi } from './api/taskApi';
+import { templateApi } from './api/templateApi';
 
 const persistConfig = {
   key: 'root',
@@ -30,6 +31,7 @@ const rootReducer = combineReducers({
   settings: settingsSlice,
   user: userSlice,
   [taskApi.reducerPath]: taskApi.reducer,
+  [templateApi.reducerPath]: templateApi.reducer,
 });
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);
@@ -42,7 +44,7 @@ export const store = configureStore({
         ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER],
         ignoredPaths: ['task.selectedTasks'], // Ignore Set in serialization check
       },
-    }).concat(taskApi.middleware as any),
+    }).concat(taskApi.middleware as any, templateApi.middleware as any),
   devTools: process.env.NODE_ENV !== 'production',
 });
 

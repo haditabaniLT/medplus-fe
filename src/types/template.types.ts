@@ -1,20 +1,52 @@
-import { TaskCategory } from './task.types';
+/**
+ * Template-related types
+ */
 
 export interface Template {
   id: string;
-  name: string;
+  user_id: string;
+  title: string;
+  category: string;
   content: string;
-  tags: string[];
-  category: TaskCategory;
-  tone: 'neutral' | 'professional' | 'friendly' | 'concise';
-  language: string;
-  isStarter: boolean;
-  isProOnly: boolean;
-  createdAt: string;
-  updatedAt: string;
+  tags?: string[];
+  is_public?: boolean;
+  is_favorite?: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
-export interface TemplateFormData {
-  name: string;
-  tags: string[];
+// API Request/Response Types
+export interface CreateTemplateRequest {
+  title: string;
+  category: string;
+  content: string;
+  tags?: string[];
+  is_public?: boolean;
+  is_favorite?: boolean;
+}
+
+export interface UpdateTemplateRequest {
+  title?: string;
+  category?: string;
+  content?: string;
+  tags?: string[];
+  is_public?: boolean;
+  is_favorite?: boolean;
+}
+
+export interface GetTemplatesQueryParams {
+  category?: string;
+  isPublic?: boolean;
+  isFavorite?: boolean;
+  search?: string;
+  sortBy?: 'created_at' | 'updated_at' | 'title' | 'category';
+  sortOrder?: 'asc' | 'desc';
+  limit?: number;
+  offset?: number;
+}
+
+export interface GetTemplatesResponse {
+  templates: Template[];
+  total: number;
+  hasMore: boolean;
 }
