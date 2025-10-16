@@ -11,7 +11,7 @@ import {
   DialogTitle,
 } from '../ui/dialog';
 import Button from '../ui/AntButton';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/card';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../ui/Card';
 import { Badge } from '../ui/badge';
 import { useToast } from '@/hooks/use-toast';
 
