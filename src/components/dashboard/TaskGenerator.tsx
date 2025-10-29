@@ -19,6 +19,7 @@ import { Separator } from '../ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import SaveTemplateModal from './SaveTemplateModal';
 import { useCreateTaskMutation } from '../../store/api/taskApi';
+import { formatOpenAIText } from '@/utils/quotaHelpers';
 
 interface GeneratedTask {
   title: string;
@@ -51,6 +52,13 @@ const languages = [
   { value: 'it', label: 'Italian' },
 ];
 
+const aiModels = [
+  { value: 'grok', label: 'Grok' },
+  { value: 'gemini', label: 'Gemini' },
+  { value: 'claude', label: 'Anthropic (Claude)' },
+  { value: 'openai', label: 'OpenAI (GPT)' },
+];
+
 interface TaskGeneratorProps {
   userPlan: 'base' | 'pro';
   tasksUsed: number;
@@ -70,6 +78,7 @@ const TaskGenerator: React.FC<TaskGeneratorProps> = ({ userPlan, tasksUsed, maxT
   const [category, setCategory] = useState<TaskCategory>(activeCategory || DEFAULT_CATEGORY);
   const [tone, setTone] = useState('neutral');
   const [language, setLanguage] = useState('en');
+  const [aiModel, setAiModel] = useState('openai');
   const [optimizePrompt, setOptimizePrompt] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationTime, setGenerationTime] = useState(0);
@@ -220,22 +229,23 @@ const TaskGenerator: React.FC<TaskGeneratorProps> = ({ userPlan, tasksUsed, maxT
       const taskData = {
         category: category,
         title: `Generated Task: ${currentInput.slice(0, 50)}${currentInput.length > 50 ? '...' : ''}`,
-        content: `This is a generated task based on your input: "${currentInput}". The task will help you achieve your goals with ${tone} tone.`,
+        prompt: `${currentInput}`,
         priority: 'medium' as const,
         due_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
         status: 'pending' as const,
         tags: [],
         type: 'generated' as const,
+        ai_model: aiModel,
+        optimize_prompt: optimizePrompt,
         metadata: {
           tone: tone,
           language: language,
-          optimizePrompt: optimizePrompt,
           generatedAt: new Date().toISOString(),
         },
       };
 
       const result = await createTask(taskData).unwrap();
-      
+
       if (timerRef.current) clearInterval(timerRef.current);
 
       // Convert API response to GeneratedTask format for display
@@ -266,7 +276,7 @@ const TaskGenerator: React.FC<TaskGeneratorProps> = ({ userPlan, tasksUsed, maxT
 
     } catch (error: any) {
       console.error('Error generating task:', error);
-      
+
       if (timerRef.current) clearInterval(timerRef.current);
       setIsGenerating(false);
 
@@ -315,7 +325,7 @@ const TaskGenerator: React.FC<TaskGeneratorProps> = ({ userPlan, tasksUsed, maxT
       };
 
       const result = await createTask(taskData).unwrap();
-      
+
       toast({
         title: 'Task saved successfully',
         description: 'Your task has been saved and is now available in your tasks list.',
@@ -323,10 +333,10 @@ const TaskGenerator: React.FC<TaskGeneratorProps> = ({ userPlan, tasksUsed, maxT
 
       // Clear the generated task after successful save
       setGeneratedTask(null);
-      
+
     } catch (error: any) {
       console.error('Error saving task:', error);
-      
+
       toast({
         title: 'Failed to save task',
         description: error?.data?.message || 'An error occurred while saving your task. Please try again.',
@@ -448,7 +458,7 @@ const TaskGenerator: React.FC<TaskGeneratorProps> = ({ userPlan, tasksUsed, maxT
         <Separator />
 
         {/* Controls Row */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
           <div className="space-y-2">
             <Label>Category</Label>
             <Select value={category} onValueChange={handleCategoryChange}>
@@ -497,6 +507,22 @@ const TaskGenerator: React.FC<TaskGeneratorProps> = ({ userPlan, tasksUsed, maxT
                 {languages.map((lang) => (
                   <SelectItem key={lang.value} value={lang.value}>
                     {lang.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label>AI Model</Label>
+            <Select value={aiModel} onValueChange={setAiModel}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {aiModels.map((model) => (
+                  <SelectItem key={model.value} value={model.value}>
+                    {model.label}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -569,10 +595,12 @@ const TaskGenerator: React.FC<TaskGeneratorProps> = ({ userPlan, tasksUsed, maxT
             <Bookmark className="mr-2 h-4 w-4" />
             Save as Template
           </Button>
-          <Button variant="outline" onClick={handleClear}>
-            <X className="mr-2 h-4 w-4" />
-            Clear
-          </Button>
+          {currentInput.trim() && (
+            <Button variant="outline" onClick={handleClear}>
+              <X className="mr-2 h-4 w-4" />
+              Clear
+            </Button>
+          )}
         </div>
 
         {(isGenerating || isCreatingTask) && generationTime > 30 && (
@@ -624,7 +652,7 @@ const TaskGenerator: React.FC<TaskGeneratorProps> = ({ userPlan, tasksUsed, maxT
 
               <div className="space-y-2">
                 <Label>Summary</Label>
-                <p className="text-sm text-muted-foreground">{generatedTask.summary}</p>
+                <div  dangerouslySetInnerHTML={{ __html: formatOpenAIText(generatedTask.summary) }} />
               </div>
 
               <div className="space-y-2">

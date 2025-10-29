@@ -3,11 +3,11 @@ import ExportModal from '../components/export/ExportModal';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { CATEGORIES } from '../constants/categories';
 import DashboardLayout from '../components/layout/DashboardLayout';
-import { 
-  ArrowLeft, 
-  Download, 
-  Trash2, 
-  Copy, 
+import {
+  ArrowLeft,
+  Download,
+  Trash2,
+  Copy,
   Calendar,
   Tag,
   FileText,
@@ -59,6 +59,7 @@ import {
 } from '../components/ui/tooltip';
 import { useGetTaskQuery, useUpdateTaskMutation, useDeleteTaskMutation } from '../store/api/taskApi';
 import { Task } from '../types/task.types';
+import { formatOpenAIText } from '@/utils/quotaHelpers';
 
 const TaskDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -66,13 +67,13 @@ const TaskDetail: React.FC = () => {
   const { toast } = useToast();
   const { isAuthenticated, user } = useSelector((state: RootState) => state.session);
   const userPlan = (user?.plan?.toLowerCase() || 'base') as 'base' | 'pro';
-  
+
   // Fetch task using the API
-  const { 
-    data: task, 
-    isLoading, 
+  const {
+    data: task,
+    isLoading,
     error,
-    refetch 
+    refetch
   } = useGetTaskQuery(id!, {
     skip: !id
   });
@@ -123,11 +124,11 @@ const TaskDetail: React.FC = () => {
   // Autosave functionality (every 5s after idle)
   useEffect(() => {
     if (!hasUnsavedChanges || !editMode) return;
-    
+
     const timer = setTimeout(() => {
       handleSave();
     }, 5000);
-    
+
     return () => clearTimeout(timer);
   }, [editedContent, hasUnsavedChanges, editMode]);
 
@@ -139,13 +140,13 @@ const TaskDetail: React.FC = () => {
         setShowConflictBanner(true);
       }
     }, 15000);
-    
+
     return () => clearTimeout(checkConcurrentEdit);
   }, [editMode]);
 
   const handleSave = useCallback(async () => {
     if (!task || !hasUnsavedChanges) return;
-    
+
     try {
       await updateTask({
         id: task.id,
@@ -153,7 +154,7 @@ const TaskDetail: React.FC = () => {
           content: editedContent,
         }
       }).unwrap();
-      
+
       setLastSaved(new Date());
       setHasUnsavedChanges(false);
       toast({
@@ -181,7 +182,7 @@ const TaskDetail: React.FC = () => {
 
   const handleDelete = async () => {
     if (!task) return;
-    
+
     try {
       await deleteTask(task.id).unwrap();
       toast({
@@ -265,11 +266,11 @@ const TaskDetail: React.FC = () => {
     }
 
     // Replace the selected text with formatted text
-    const newContent = 
-      editedContent.substring(0, start) + 
-      formattedText + 
+    const newContent =
+      editedContent.substring(0, start) +
+      formattedText +
       editedContent.substring(end);
-    
+
     setEditedContent(newContent);
     setHasUnsavedChanges(true);
 
@@ -419,7 +420,7 @@ const TaskDetail: React.FC = () => {
 
             <div className="flex items-center justify-between flex-wrap gap-4">
               <h1 className="text-3xl font-bold tracking-tight">{task.title}</h1>
-              
+
               <div className="flex items-center gap-2">
                 <Button variant="outline" size="sm" onClick={() => navigate('/tasks')}>
                   <ArrowLeft className="h-4 w-4 mr-2" />
@@ -442,15 +443,15 @@ const TaskDetail: React.FC = () => {
                   <Copy className="h-4 w-4 mr-2" />
                   Duplicate
                 </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      onClick={handleDelete}
-                      disabled={isDeleting}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      {isDeleting ? 'Deleting...' : 'Delete'}
-                    </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDelete}
+                  disabled={isDeleting}
+                >
+                  <Trash2 className="h-4 w-4 mr-2" />
+                  {isDeleting ? 'Deleting...' : 'Delete'}
+                </Button>
               </div>
             </div>
           </div>
@@ -543,16 +544,16 @@ const TaskDetail: React.FC = () => {
                 {hasUnsavedChanges && (
                   <Badge variant="outline" className="text-xs">Unsaved changes</Badge>
                 )}
-                    {editMode && (
-                      <Button 
-                        variant="default" 
-                        size="sm" 
-                        onClick={handleSave} 
-                        disabled={!hasUnsavedChanges || isUpdating}
-                      >
-                        {isUpdating ? 'Saving...' : 'Save Changes'}
-                      </Button>
-                    )}
+                {editMode && (
+                  <Button
+                    variant="default"
+                    size="sm"
+                    onClick={handleSave}
+                    disabled={!hasUnsavedChanges || isUpdating}
+                  >
+                    {isUpdating ? 'Saving...' : 'Save Changes'}
+                  </Button>
+                )}
                 <Sheet>
                   <SheetTrigger asChild>
                     <Button variant="outline" size="sm">
@@ -588,8 +589,8 @@ const TaskDetail: React.FC = () => {
                                     {new Date(version.timestamp).toLocaleString()}
                                   </p>
                                 </div>
-                                <Button 
-                                  size="sm" 
+                                <Button
+                                  size="sm"
                                   variant="ghost"
                                   onClick={() => restoreVersion(version.id)}
                                 >
@@ -668,8 +669,10 @@ const TaskDetail: React.FC = () => {
               ) : (
                 <div className="space-y-4">
                   <div>
-                    <h3 className="text-lg font-semibold mb-2">Content</h3>
-                    <p className="text-muted-foreground whitespace-pre-wrap">{task.content}</p>
+                    {/* <h3 className="text-lg font-semibold mb-2">Content</h3> */}
+                    {/* <p className="text-muted-foreground whitespace-pre-wrap">{task.content}</p> */}
+                    <div dangerouslySetInnerHTML={{ __html: formatOpenAIText(task.content) }} />
+
                   </div>
                   {task.metadata && Object.keys(task.metadata).length > 0 && (
                     <>

@@ -144,3 +144,31 @@ export const formatQuotaDisplay = (
   const limit = QUOTA_LIMITS[userPlan].tasksPerMonth;
   return `${tasksUsed}/${limit}`;
 };
+
+
+export function formatOpenAIText(text) {
+  if (!text) return "";
+
+  let formatted = text.trim();
+
+  // Replace double newlines with <br><br>
+  formatted = formatted.replace(/\n{2,}/g, "<br><br>");
+
+  // Convert numbered headings like "1. **Heading**" to <h3>
+  formatted = formatted.replace(/(\d+)\.\s+\*\*(.*?)\*\*/g, "<h3>$1. $2</h3>");
+
+  // Convert bold **text** to <strong>
+  formatted = formatted.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
+
+  // Convert bullet points "- something" to HTML bullet "• something"
+  formatted = formatted.replace(/(^|\n)\s*-\s+/g, "$1• ");
+
+  // Optional: collapse extra spaces
+  formatted = formatted.replace(/\s{2,}/g, " ");
+
+  // Add line breaks before numbered sections
+  formatted = formatted.replace(/(\d+\.)/g, "<br><br><b>$1</b>");
+
+  // Wrap in a container with basic readable styling
+  return `<div style="font-family: Arial, sans-serif; line-height: 1.6;">${formatted}</div>`;
+}
