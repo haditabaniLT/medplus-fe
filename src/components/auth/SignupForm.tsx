@@ -105,7 +105,7 @@ const SignupForm: React.FC = () => {
         >
           <Form.Item
             name="fullName"
-            initialValue={"John Doe"}
+            // initialValue={"John Doe"}
             rules={[{ required: true, message: 'Please enter your full name' }]}
           >
             <TextInput
@@ -117,7 +117,7 @@ const SignupForm: React.FC = () => {
 
           <Form.Item
             name="email"
-            initialValue={"johndoe@yopmail.com"}
+            // initialValue={"johndoe@yopmail.com"}
             rules={[
               { required: true, message: 'Please enter your email' },
               { type: 'email', message: 'Please enter a valid email' }
@@ -133,7 +133,7 @@ const SignupForm: React.FC = () => {
 
           <Form.Item
             name="password"
-            initialValue={"@@Power2me"}
+            // initialValue={"@@Power2me"}
             rules={[{ required: true, message: 'Please enter your password' }]}
           >
             <TextInput
@@ -163,7 +163,7 @@ const SignupForm: React.FC = () => {
 
           <Form.Item
             name="confirmPassword"
-            initialValue={"@@Power2me"}
+            // initialValue={"@@Power2me"}
             rules={[{ required: true, message: 'Please confirm your password' }]}
           >
             <TextInput
