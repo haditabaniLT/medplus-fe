@@ -359,8 +359,8 @@ const Profile = () => {
           </Card>
 
           {/* Brand Section (Pro Only) */}
-          <Card className={userPlan === "base" ? "opacity-60" : ""}>
-            <CardHeader>
+          {/* <Card className={userPlan === "base" ? "opacity-60" : ""}> */}
+            {/* <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
                   <CardTitle className="flex items-center gap-2">
@@ -377,8 +377,8 @@ const Profile = () => {
                   </Badge>
                 )}
               </div>
-            </CardHeader>
-            <CardContent className="space-y-6">
+            </CardHeader> */}
+            {/* <CardContent className="space-y-6">
               {userPlan === "base" ? (
                 <div className="text-center py-8 space-y-4">
                   <Lock className="h-12 w-12 mx-auto text-muted-foreground" />
@@ -504,8 +504,8 @@ const Profile = () => {
                   </div>
                 </>
               )}
-            </CardContent>
-          </Card>
+            </CardContent> */}
+          {/* </Card> */}
         </div>
       )}
     </DashboardLayout>

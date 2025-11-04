@@ -17,7 +17,7 @@ import { updateUserProfile } from '../../store/slices/sessionSlice';
 import { OnboardingData } from '../../types';
 import RoleGoalsStep from './steps/RoleGoalsStep';
 import PersonalizationStep from './steps/PersonalizationStep';
-import BrandSetupStep from './steps/BrandSetupStep';
+// import BrandSetupStep from './steps/BrandSetupStep'; // Temporarily commented out
 import ReviewStep from './steps/ReviewStep';
 import { Card } from '../ui/Card';
 import { Progress } from '../ui/progress';
@@ -29,7 +29,7 @@ const OnboardingWizard: React.FC = () => {
   const { currentStep, data, hasUnsavedChanges, isCompleted } = useSelector((state: RootState) => state.onboarding);
   const { isAuthenticated, user } = useSelector((state: RootState) => state.session);
 
-  const totalSteps = 4;
+  const totalSteps = 3; // Reduced from 4 to 3 (Brand Setup step commented out)
 
   // =====================================================
   // INITIALIZATION & AUTH CHECK
@@ -96,12 +96,14 @@ const OnboardingWizard: React.FC = () => {
         return {
           goals: data.goals || [],
         };
-      case 3:
-        return {
-          brandPrimaryColor: data.primaryColor || '#1ABC9C',
-          brandSecondaryColor: data.secondaryColor || '#0B1D3A',
-          brandFont: data.font || 'Inter',
-        };
+      // case 3: Brand Setup - Temporarily commented out
+      //   return {
+      //     brandPrimaryColor: data.primaryColor || '#1ABC9C',
+      //     brandSecondaryColor: data.secondaryColor || '#0B1D3A',
+      //     brandFont: data.font || 'Inter',
+      //   };
+      case 3: // Now ReviewStep
+        return null;
       default:
         return null;
     }
@@ -140,9 +142,13 @@ const OnboardingWizard: React.FC = () => {
         industry: data.industry || '',
         seniority: data.seniority || '',
         goals: data.goals || [],
-        brandPrimaryColor: data.primaryColor,
-        brandSecondaryColor: data.secondaryColor,
-        brandFont: data.font,
+        // Brand setup temporarily commented out
+        // brandPrimaryColor: data.primaryColor,
+        // brandSecondaryColor: data.secondaryColor,
+        // brandFont: data.font,
+        brandPrimaryColor: data.primaryColor || undefined,
+        brandSecondaryColor: data.secondaryColor || undefined,
+        brandFont: data.font || undefined,
       });
 
       if (!validation.isValid) {
@@ -158,9 +164,13 @@ const OnboardingWizard: React.FC = () => {
           industry: data.industry || '',
           seniority: data.seniority || '',
           goals: data.goals || [],
-          brandPrimaryColor: data.primaryColor,
-          brandSecondaryColor: data.secondaryColor,
-          brandFont: data.font,
+          // Brand setup temporarily commented out
+          // brandPrimaryColor: data.primaryColor,
+          // brandSecondaryColor: data.secondaryColor,
+          // brandFont: data.font,
+          brandPrimaryColor: data.primaryColor || undefined,
+          brandSecondaryColor: data.secondaryColor || undefined,
+          brandFont: data.font || undefined,
         }
       }));
 
@@ -182,9 +192,9 @@ const OnboardingWizard: React.FC = () => {
         return !!(data.role && data.goals && data.goals.length > 0);
       case 2: // PersonalizationStep  
         return !!(data.bio && data.industry && data.seniority);
-      case 3: // BrandSetupStep
-        return true; // Brand setup is optional
-      case 4: // ReviewStep
+      // case 3: BrandSetupStep - Temporarily commented out
+      //   return true; // Brand setup is optional
+      case 3: // ReviewStep (now step 3)
         return true; // Review step
       default:
         return false;
@@ -211,9 +221,9 @@ const OnboardingWizard: React.FC = () => {
         return <RoleGoalsStep {...stepProps} />;
       case 2:
         return <PersonalizationStep {...stepProps} />;
-      case 3:
-        return <BrandSetupStep {...stepProps} />;
-      case 4:
+      // case 3: BrandSetupStep - Temporarily commented out
+      //   return <BrandSetupStep {...stepProps} />;
+      case 3: // Now ReviewStep (was step 4)
         return <ReviewStep {...stepProps} />;
       default:
         return <RoleGoalsStep {...stepProps} />;
@@ -226,9 +236,9 @@ const OnboardingWizard: React.FC = () => {
         return 'Basic Information';
       case 2:
         return 'Goals & Intent';
-      case 3:
-        return 'Brand Setup';
-      case 4:
+      // case 3: Brand Setup - Temporarily commented out
+      //   return 'Brand Setup';
+      case 3: // Now Review & Complete (was step 4)
         return 'Review & Complete';
       default:
         return 'Setup';
