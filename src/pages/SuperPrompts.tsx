@@ -21,6 +21,7 @@ import Dropdown from '../components/ui/Dropdown';
 import LivePreview from '../components/super-prompts/LivePreview';
 import FormattedOutput from '../components/super-prompts/FormattedOutput';
 import { Button } from '../components/ui/button';
+import { getSupabaseTokenForAPI } from '../utils/supabaseAuth';
 
 interface Category {
   id: string;
@@ -51,6 +52,8 @@ const SuperPrompts: React.FC = () => {
   const [showOutput, setShowOutput] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedContent, setGeneratedContent] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const [promptId, setPromptId] = useState<string | null>(null);
 
   React.useEffect(() => {
     if (!isAuthenticated) {
@@ -313,119 +316,114 @@ const SuperPrompts: React.FC = () => {
   };
 
   const handleGenerate = async () => {
-    // Build API request body with only non-null/undefined values
-    const questions: Record<string, string> = {};
-    
-    // Filter question answers to only include those with values
-    Object.entries(questionAnswers).forEach(([key, value]) => {
-      if (value !== null && value !== undefined && value.trim() !== '') {
-        questions[key] = value;
-      }
-    });
-
-    const requestBody: Record<string, any> = {
-      category_id: selectedCategory,
-      category_name: selectedCategoryData?.name,
-    };
-
-    // Add form fields only if they have values
-    if (formData.task && formData.task.trim() !== '') {
-      requestBody.task = formData.task;
-    }
-    if (formData.tone && formData.tone.trim() !== '') {
-      requestBody.tone = formData.tone;
-    }
-    if (formData.deadline && formData.deadline.trim() !== '') {
-      requestBody.deadline = formData.deadline;
-    }
-    if (formData.audience && formData.audience.trim() !== '') {
-      requestBody.audience = formData.audience;
-    }
-
-    // Add questions object only if it has values
-    if (Object.keys(questions).length > 0) {
-      requestBody.questions = questions;
-    }
-
-    // Console log the request body
-    console.log('=== Generate Button Pressed - API Request Body ===');
-    console.log('Request Body:', JSON.stringify(requestBody, null, 2));
-    console.log('================================================');
-    
+    // Reset error state
+    setError(null);
     setIsGenerating(true);
     setShowOutput(false);
     
-    // TODO: Replace with actual API call
-    // Example: const response = await fetch('/api/super-prompts/generate', {
-    //   method: 'POST',
-    //   headers: { 'Content-Type': 'application/json' },
-    //   body: JSON.stringify(requestBody)
-    // });
-    
-    // Combine all field values into a comprehensive prompt
-    const combinedPrompt = buildSuperPrompt();
-    
-    // Simulate API call - replace with actual API call
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    
-    // Use the combined prompt as the generated content
-    setGeneratedContent(combinedPrompt);
-    setIsGenerating(false);
-    setShowOutput(true);
-  };
+    try {
+      // Get Supabase access token
+      const tokenData = await getSupabaseTokenForAPI();
+      
+      if (!tokenData) {
+        throw new Error('User not authenticated. Please log in again.');
+      }
 
-  const buildSuperPrompt = () => {
-    const parts: string[] = [];
-    
-    // Add task input
-    if (formData.task) {
-      parts.push(formData.task);
-    }
-    
-    // Add category context
-    if (selectedCategoryData) {
-      parts.push(`\nCategory: ${selectedCategoryData.name}`);
-    }
-    
-    // Add tone
-    if (formData.tone) {
-      const toneLabel = toneOptions.find(opt => opt.value === formData.tone)?.label || formData.tone;
-      parts.push(`Tone: ${toneLabel}`);
-    }
-    
-    // Add deadline
-    if (formData.deadline) {
-      parts.push(`Deadline: ${formData.deadline}`);
-    }
-    
-    // Add audience
-    if (formData.audience) {
-      parts.push(`Audience: ${formData.audience}`);
-    }
-    
-    // Add question answers
-    const questionParts: string[] = [];
-    if (selectedCategoryData) {
-      selectedCategoryData.questions.forEach((question) => {
-        const answer = questionAnswers[question.id];
-        if (answer) {
-          questionParts.push(`${question.label}: ${answer}`);
+      // Build API request body with only non-null/undefined values
+      const questions: Record<string, string> = {};
+      
+      // Filter question answers to only include those with values
+      Object.entries(questionAnswers).forEach(([key, value]) => {
+        if (value !== null && value !== undefined && value.trim() !== '') {
+          questions[key] = value;
         }
       });
+
+      // Build request body according to API spec
+      const requestBody: Record<string, any> = {
+        provided_prompt: formData.task, // Required field
+        provided_ai_model: 'openai', // Default to openai, can be made configurable later
+      };
+
+      // Add category fields if available
+      if (selectedCategory) {
+        requestBody.category_id = selectedCategory;
+      }
+      if (selectedCategoryData?.name) {
+        requestBody.category_name = selectedCategoryData.name;
+      }
+
+      // Add form fields only if they have values
+      if (formData.task && formData.task.trim() !== '') {
+        requestBody.task = formData.task;
+      }
+      if (formData.tone && formData.tone.trim() !== '') {
+        requestBody.tone = formData.tone;
+      }
+      if (formData.deadline && formData.deadline.trim() !== '') {
+        requestBody.deadline = formData.deadline;
+      }
+      if (formData.audience && formData.audience.trim() !== '') {
+        requestBody.audience = formData.audience;
+      }
+
+      // Add questions object only if it has values
+      if (Object.keys(questions).length > 0) {
+        requestBody.questions = questions;
+      }
+
+      // Get Supabase URL from environment
+      const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+      if (!supabaseUrl) {
+        throw new Error('Supabase URL is not configured');
+      }
+
+      // Console log the request body for debugging
+      console.log('=== Generate Button Pressed - API Request Body ===');
+      console.log('Request Body:', JSON.stringify(requestBody, null, 2));
+      console.log('================================================');
+
+      // Make API call to Super Prompt endpoint
+      const response = await fetch(
+        `${supabaseUrl}/functions/v1/tasks-api/super-prompt`,
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${tokenData.token}`,
+          },
+          body: JSON.stringify(requestBody),
+        }
+      );
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.error || 'Failed to generate super prompt');
+      }
+
+      // Check if response has success flag
+      if (result.success === false) {
+        throw new Error(result.error || 'Failed to generate super prompt');
+      }
+
+      // Extract generated prompt and ID from response
+      if (result.data?.generated_prompt) {
+        setGeneratedContent(result.data.generated_prompt);
+        if (result.data.id) {
+          setPromptId(result.data.id);
+        }
+        setShowOutput(true);
+      } else {
+        throw new Error('Invalid response format from API');
+      }
+    } catch (err: any) {
+      console.error('Error generating super prompt:', err);
+      setError(err.message || 'An error occurred while generating the prompt');
+      setShowOutput(false);
+    } finally {
+      setIsGenerating(false);
     }
-    
-    if (questionParts.length > 0) {
-      parts.push('\nAdditional Context:');
-      parts.push(...questionParts);
-    }
-    
-    // Combine all parts
-    let combinedText = parts.join('\n');
-    
-    // Add improvement instruction
-    combinedText += '\n\n---\n\nImprove this prompt to create a super prompt that is comprehensive, actionable, and tailored to the specific needs and context provided above.';
-    
-    return combinedText;
   };
 
   const handleRegenerate = () => {
@@ -434,7 +432,9 @@ const SuperPrompts: React.FC = () => {
 
   const handleSave = () => {
     // TODO: Implement save functionality
+    // The prompt is already saved in the database with promptId
     console.log('Saving prompt:', generatedContent);
+    console.log('Prompt ID:', promptId);
     // After saving, redirect to list page
     setTimeout(() => {
       navigate('/super-prompts');
@@ -443,6 +443,7 @@ const SuperPrompts: React.FC = () => {
 
   const handleEditInputs = () => {
     setShowOutput(false);
+    setError(null);
   };
 
   return (
@@ -599,6 +600,13 @@ const SuperPrompts: React.FC = () => {
                 ))}
               </div>
             </div>
+
+            {/* Error Display */}
+            {error && (
+              <div className="mt-4 p-4 bg-destructive/10 border border-destructive/20 rounded-lg">
+                <p className="text-sm text-destructive">{error}</p>
+              </div>
+            )}
 
             {/* Generate Button */}
             <div className="mt-8 pt-6 border-t border-border">

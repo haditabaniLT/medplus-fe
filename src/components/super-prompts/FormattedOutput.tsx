@@ -135,13 +135,13 @@ const FormattedOutput: React.FC<FormattedOutputProps> = ({
           <RotateCcw className="h-4 w-4" />
           Regenerate
         </Button>
-        <Button
+        {/* <Button
           onClick={onSave}
           className="flex items-center gap-2 bg-primary hover:bg-primary/90"
         >
           <Save className="h-4 w-4" />
           Save Prompt
-        </Button>
+        </Button> */}
       </div>
     </div>
   );

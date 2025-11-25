@@ -21,6 +21,7 @@ import Profile from "./pages/Profile";
 import Settings from "./pages/Settings";
 import SuperPromptsList from "./pages/SuperPromptsList";
 import SuperPromptsCreate from "./pages/SuperPrompts";
+import SuperPromptDetail from "./pages/SuperPromptDetail";
 import SignupForm from "./components/auth/SignupForm";
 import VerifyEmailForm from "./components/auth/VerifyEmailForm";
 import LoginForm from "./components/auth/LoginForm";
@@ -83,6 +84,7 @@ const AppContent = () => {
               <Route path="/settings" element={<Settings />} />
               <Route path="/super-prompts" element={<SuperPromptsList />} />
               <Route path="/super-prompts/create" element={<SuperPromptsCreate />} />
+              <Route path="/super-prompts/:id" element={<SuperPromptDetail />} />
               <Route path="/signup" element={<SignupForm />} />
               <Route path="/verify-email" element={<VerifyEmailForm />} />
               <Route path="/login" element={<LoginForm />} />
