@@ -134,7 +134,7 @@ const ReviewStep: React.FC<OnboardingStepProps> = ({
         </ReviewSection>
 
         {/* Brand Setup */}
-        <ReviewSection title="Brand Setup">
+        {/* <ReviewSection title="Brand Setup">
           <div className="space-y-2">
             {data.logo ? (
               <div>
@@ -183,7 +183,7 @@ const ReviewStep: React.FC<OnboardingStepProps> = ({
               </div>
             )}
           </div>
-        </ReviewSection>
+        </ReviewSection> */}
       </div>
 
       {/* Summary stats */}
