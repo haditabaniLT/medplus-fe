@@ -13,7 +13,8 @@ import {
   History,
   Crown,
   HelpCircle,
-  Lock
+  Lock,
+  Sparkles
 } from 'lucide-react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { useDispatch } from 'react-redux';
@@ -60,6 +61,7 @@ const DashboardSidebar: React.FC<SidebarProps> = ({ isOpen, isCollapsed, userPla
   }));
 
   const secondaryLinks = [
+    { name: 'Super Prompts', icon: Sparkles, href: '/super-prompts' },
     { name: 'Task History', icon: History, href: '/tasks' },
     { name: 'Templates', icon: Crown, href: '/templates', pro: true },
     { name: 'Help', icon: HelpCircle, href: '/help', locked: true },
